@@ -11,12 +11,13 @@ public class Network {
     private static Socket socket;
     private static ObjectEncoderOutputStream out;
     private static ObjectDecoderInputStream in;
+    private static int fileSize = 1000 * 1024 * 1024;
 
     public static void start() {
         try {
             socket = new Socket("localhost", 8189);
             out = new ObjectEncoderOutputStream(socket.getOutputStream());
-            in = new ObjectDecoderInputStream(socket.getInputStream(), 50 * 1024 * 1024);
+            in = new ObjectDecoderInputStream(socket.getInputStream(), fileSize);
         } catch (IOException e) {
             e.printStackTrace();
         }

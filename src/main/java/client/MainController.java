@@ -3,12 +3,15 @@ package client;
 import common.AbstractMessage;
 import common.FileMessage;
 import common.FileRequest;
+import common.FileWrapper;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.MouseEvent;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +26,10 @@ public class MainController implements Initializable {
     TextField tfFileName;
 
     @FXML
-    ListView<String> filesList;
+    ListView<String> clientFilesList;
+
+    @FXML
+    ListView<String> cloudFileList;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -49,33 +55,35 @@ public class MainController implements Initializable {
         refreshLocalFilesList();
     }
 
-    public void pressOnDownloadBtn(ActionEvent actionEvent) throws IOException {
-        if (tfFileName.getLength() > 0) {
-            Network.sendMsg(new FileMessage(Paths.get("client_storage/" + tfFileName)));
-            tfFileName.clear();
-        }
+    public void onDropped(DragEvent dragEvent) {
+        File file = dragEvent.getDragboard().getFiles().stream().findFirst().get();
+        FileWrapper fileWrapper = new FileWrapper(file);
+        Network.sendMsg(fileWrapper);
+        refreshLocalFilesList();
     }
 
-    public void pressOnSendBtn(ActionEvent actionEvent) throws IOException {
-        if (tfFileName.getLength() > 0) {
-            Network.sendMsg(new FileMessage(Paths.get("client_storage/" + tfFileName.getText())));
-            tfFileName.clear();
-        }
+    public void onClicked(MouseEvent arg0) throws IOException {
+        FileRequest fileRequest = new FileRequest(cloudFileList.getSelectionModel().getSelectedItem());
+        Network.sendMsg(fileRequest);
     }
 
     public void refreshLocalFilesList() {
         if (Platform.isFxApplicationThread()) {
             try {
-                filesList.getItems().clear();
-                Files.list(Paths.get("client_storage")).map(p -> p.getFileName().toString()).forEach(o -> filesList.getItems().add(o));
+                clientFilesList.getItems().clear();
+                Files.list(Paths.get("client_storage")).map(p -> p.getFileName().toString()).forEach(o -> clientFilesList.getItems().add(o));
+                cloudFileList.getItems().clear();
+                Files.list(Paths.get("server_storage")).map(p -> p.getFileName().toString()).forEach(o -> cloudFileList.getItems().add(o));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
             Platform.runLater(() -> {
                 try {
-                    filesList.getItems().clear();
-                    Files.list(Paths.get("client_storage")).map(p -> p.getFileName().toString()).forEach(o -> filesList.getItems().add(o));
+                    clientFilesList.getItems().clear();
+                    Files.list(Paths.get("client_storage")).map(p -> p.getFileName().toString()).forEach(o -> clientFilesList.getItems().add(o));
+                    cloudFileList.getItems().clear();
+                    Files.list(Paths.get("server_storage")).map(p -> p.getFileName().toString()).forEach(o -> cloudFileList.getItems().add(o));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

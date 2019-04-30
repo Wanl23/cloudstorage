@@ -2,10 +2,12 @@ package server;
 
 import common.FileMessage;
 import common.FileRequest;
+import common.FileWrapper;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
@@ -23,9 +25,9 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
                     ctx.writeAndFlush(fm);
                 }
             }
-            if (msg instanceof FileMessage) {
-                FileMessage fm = (FileMessage) msg;
-                Files.write(Paths.get("server_storage/" + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
+            if (msg instanceof FileWrapper) {
+                FileWrapper fw = (FileWrapper) msg;
+                Files.write(Paths.get("server_storage/" + fw.getFile().getName()), Files.readAllBytes(fw.getFile().toPath()), StandardOpenOption.CREATE);
             }
         } finally {
             ReferenceCountUtil.release(msg);
